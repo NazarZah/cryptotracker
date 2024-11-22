@@ -26,21 +26,6 @@ const AVAILABLE_CRYPTO_OPTIONS = [
 ];
 const THROTTLE_INTERVAL = 3000;
 
-const initializeCryptoData = async (
-  selectedCryptos: string[]
-): Promise<CryptoData[]> => {
-  return Promise.all(
-    selectedCryptos.map(async (symbol) => {
-      const openPrice = await getPrice24hAgo(symbol);
-      return {
-        symbol,
-        price: "0",
-        change24h: openPrice ? -100 : undefined, // Placeholder until WebSocket updates
-      };
-    })
-  );
-};
-
 const Home = () => {
   const [cryptoData, setCryptoData] = useState<CryptoData[]>([]);
   const [selectedCryptos, setSelectedCryptos] = useState<string[]>([
@@ -51,6 +36,21 @@ const Home = () => {
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [sortBy, setSortBy] = useState<"price" | "change24h">("price");
   const socketRef = useRef<WebSocket | null>(null);
+
+  const initializeCryptoData = async (
+    selectedCryptos: string[]
+  ): Promise<CryptoData[]> => {
+    return Promise.all(
+      selectedCryptos.map(async (symbol) => {
+        const openPrice = await getPrice24hAgo(symbol);
+        return {
+          symbol,
+          price: "0",
+          change24h: openPrice ? -100 : undefined, // Placeholder until WebSocket updates
+        };
+      })
+    );
+  };
 
   const connect = async () => {
     const initialData = await initializeCryptoData(selectedCryptos);
@@ -71,11 +71,6 @@ const Home = () => {
       selectedCryptos
     );
   };
-
-  useEffect(() => {
-    connect();
-    return () => socketRef.current?.close();
-  }, [selectedCryptos]);
 
   const handleRefresh = async () => {
     socketRef.current?.close();
@@ -99,9 +94,14 @@ const Home = () => {
     );
   };
 
+  useEffect(() => {
+    connect();
+    return () => socketRef.current?.close();
+  }, [selectedCryptos]);
+
   return (
     <SafeAreaView className="bg-[#f7f7f7] h-full">
-      <StatusBar barStyle="light-content" />
+      <StatusBar />
       {/* Header */}
       <View className="h-20 w-full flex flex-row items-center px-4 justify-between bg-slate-700 mb-5">
         <Text className="text-white text-2xl font-semibold">CRYTrack</Text>
@@ -177,12 +177,7 @@ const Home = () => {
             {AVAILABLE_CRYPTO_OPTIONS.map((symbol) => (
               <View
                 key={symbol}
-                style={{
-                  flexDirection: "row",
-                  alignItems: "center",
-                  justifyContent: "space-between",
-                  marginBottom: 15,
-                }}
+                className="flex-row items-center justify-between mb-4"
               >
                 <Text className="text-xm ">{symbol}</Text>
                 <CustomCheckBox
